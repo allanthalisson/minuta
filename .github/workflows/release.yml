@@ -73,7 +73,14 @@ jobs:
     needs: [windows, macos]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
       - uses: actions/download-artifact@v4
         with: { path: out, merge-multiple: true }
+      # Cada job de Mac gera o seu latest-mac.yml e eles se sobrescrevem no download.
+      # Este passo refaz um único arquivo listando os dois .zip, senão o Mac Intel não acha a atualização.
+      - run: node build/make-latest-mac.js out
+      - run: ls -la out
       - uses: softprops/action-gh-release@v2
-        with: { files: 'out/*' }
+        with: { files: 'out/*', generate_release_notes: true }

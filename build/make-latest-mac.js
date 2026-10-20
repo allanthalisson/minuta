@@ -1,10 +1,12 @@
 // Gera o latest-mac.yml a partir dos .zip que realmente publicamos.
+// Uso: node build/make-latest-mac.js [pasta]  (padrão: dist/)
 // O electron-builder gera um para o zip dele, mas nós reempacotamos o .app (para preservar os links
 // simbólicos da assinatura), então o hash dele não serviria.
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
-const dist = path.join(__dirname, '..', 'dist');
+const dist = process.argv[2] ? path.resolve(process.argv[2]) : path.join(__dirname, '..', 'dist');
 const version = require('../package.json').version;
-const files = fs.readdirSync(dist).filter((f) => /^Minuta-.*-mac-(arm64|x64)\.zip$/.test(f)).sort();
+// aceita os dois nomes: o do electron-builder (Minuta-1.0.0-arm64.zip) e o nosso (Minuta-1.0.0-mac-arm64.zip)
+const files = fs.readdirSync(dist).filter((f) => /^Minuta-.*(arm64|x64)\.zip$/.test(f)).sort();
 if (!files.length) { console.error('nenhum .zip de Mac em dist/'); process.exit(1); }
 const entry = (f) => {
   const b = fs.readFileSync(path.join(dist, f));
