@@ -1,0 +1,79 @@
+name: release
+
+# Gera os instaladores em máquinas Windows e macOS reais e testa o app.
+# Assinatura opcional (Secrets): WIN_CSC_LINK / WIN_CSC_KEY_PASSWORD (Windows),
+# CSC_LINK / CSC_KEY_PASSWORD / APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD / APPLE_TEAM_ID (macOS, notarização).
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci || npm install
+      - run: npm test
+      - run: node build/stage.js win32 x64
+      - run: node build/build.js win32 x64
+        env:
+          CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+      - name: Teste rápido do app empacotado (abre, carrega o motor e fecha)
+        shell: pwsh
+        run: |
+          $env:MINUTA_USER_DATA = "$env:RUNNER_TEMP\minuta-ud"
+          $p = Start-Process -FilePath "build\stage-win32-x64\dist\win-unpacked\Minuta.exe" -ArgumentList "--hidden" -PassThru
+          Start-Sleep -Seconds 25
+          if ($p.HasExited) { Get-Content "$env:MINUTA_USER_DATA\minuta.log"; throw "o app fechou sozinho" }
+          Get-Content "$env:MINUTA_USER_DATA\minuta.log"
+          Stop-Process -Id $p.Id -Force
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Minuta-Windows
+          path: |
+            build/stage-win32-x64/dist/*.exe
+            build/stage-win32-x64/dist/latest.yml
+
+  macos:
+    runs-on: macos-14
+    strategy:
+      matrix: { arch: [arm64, x64] }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci || npm install
+      - run: npm test
+      - run: node build/stage.js darwin ${{ matrix.arch }}
+      - run: node build/build.js darwin ${{ matrix.arch }}
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          CSC_IDENTITY_AUTO_DISCOVERY: ${{ secrets.CSC_LINK != '' }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Minuta-macOS-${{ matrix.arch }}
+          path: |
+            build/stage-darwin-${{ matrix.arch }}/dist/*.dmg
+            build/stage-darwin-${{ matrix.arch }}/dist/*.zip
+            build/stage-darwin-${{ matrix.arch }}/dist/latest-mac.yml
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: out, merge-multiple: true }
+      - uses: softprops/action-gh-release@v2
+        with: { files: 'out/*' }

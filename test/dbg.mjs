@@ -1,0 +1,11 @@
+import { getLlama, LlamaChatSession } from 'node-llama-cpp';
+const t = (m) => console.log(((Date.now() - t0) / 1000).toFixed(1) + 's', m); const t0 = Date.now();
+const llama = await getLlama({ gpu: 'auto' }); t('llama');
+const model = await llama.loadModel({ modelPath: '/tmp/mud/models/llm-advanced.gguf' }); t('model, trainCtx=' + model.trainContextSize);
+const ctx = await model.createContext({ contextSize: 4096 }); t('ctx');
+const s = new LlamaChatSession({ contextSequence: ctx.getSequence(), systemPrompt: 'x' });
+const schema = { type: 'object', properties: { titulo: { type: 'string' }, itens: { type: 'array', items: { type: 'string' }, maxItems: 3 } }, required: ['titulo', 'itens'] };
+const g = await llama.createGrammarForJsonSchema(schema); t('grammar');
+let n = 0;
+const out = await s.prompt('oi '.repeat(300), { grammar: process.env.NOG ? undefined : g, maxTokens: 200, onTextChunk: () => { n++; if (n % 50 === 0) t('tok ' + n); } });
+t('done ' + out.length + ' ' + out.slice(0, 120));

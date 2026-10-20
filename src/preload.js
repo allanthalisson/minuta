@@ -1,0 +1,66 @@
+'use strict';
+const { contextBridge, ipcRenderer } = require('electron');
+
+async function call(ch, ...args) {
+  const r = await ipcRenderer.invoke(ch, ...args);
+  if (!r || !r.ok) throw new Error((r && r.error) || 'Erro inesperado');
+  return r.data;
+}
+const on = (ch) => (fn) => { const h = (_e, ...a) => fn(...a); ipcRenderer.on(ch, h); return () => ipcRenderer.removeListener(ch, h); };
+
+contextBridge.exposeInMainWorld('minuta', {
+  info: () => call('app:info'),
+  saveSettings: (p) => call('settings:save', p),
+  chooseFolder: () => call('settings:chooseFolder'),
+  library: () => call('library:get'),
+  createProject: (p) => call('project:create', p),
+  updateProject: (id, p) => call('project:update', id, p),
+  deleteProject: (id) => call('project:delete', id),
+  saveTemplate: (t) => call('template:save', t),
+  deleteTemplate: (id) => call('template:delete', id),
+  listMeetings: (f) => call('meetings:list', f),
+  getMeeting: (id) => call('meeting:get', id),
+  createMeeting: (o) => call('meeting:create', o),
+  updateMeeting: (id, p) => call('meeting:update', id, p),
+  deleteMeeting: (id) => call('meeting:delete', id),
+  saveAta: (id, ata) => call('meeting:saveAta', id, ata),
+  regenerate: (id, tpl) => call('meeting:regenerate', id, tpl),
+  retry: (id) => call('meeting:retry', id),
+  retranscribe: (id) => call('meeting:retranscribe', id),
+  cancel: (id) => call('meeting:cancel', id),
+  reveal: (id) => call('meeting:reveal', id),
+  copyAta: (id) => call('meeting:copy', id),
+  exportMeeting: (id, fmt) => call('meeting:export', id, fmt),
+  startRecording: (id) => call('rec:start', id),
+  stopRecording: (id) => call('rec:stop', id),
+  sendChunk: (id, track, data) => ipcRenderer.send('rec:chunk', id, track, data),
+  downloadModels: (mode) => call('models:download', mode),
+  cancelDownload: () => call('models:cancel'),
+  removeUnusedModels: () => call('models:removeUnused'),
+  ask: (id, q, history) => call('chat:ask', id, q, history),
+  mediaAccess: (kind) => call('system:mediaAccess', kind),
+  openPrivacy: (kind) => call('system:openPrivacy', kind),
+  openLog: () => call('system:openLog'),
+  diag: () => call('system:diag'),
+  updateGet: () => call('update:get'),
+  updateCheck: () => call('update:check'),
+  updateDownload: () => call('update:download'),
+  updateInstall: () => call('update:install'),
+  updateDismiss: () => call('update:dismiss'),
+  updateOpenPage: () => call('update:openPage'),
+  aiGet: () => call('ai:get'),
+  aiSave: (patch) => call('ai:save', patch),
+  aiClearKey: () => call('ai:clearKey'),
+  aiModels: (draft) => call('ai:models', draft),
+  aiTest: (draft, feature) => call('ai:test', draft, feature),
+  logUi: (m) => call('system:logUi', m),
+  onMeetingChanged: on('meeting:changed'),
+  onModelsProgress: on('models:progress'),
+  onLiveSegment: on('live:segment'),
+  onShortcutRecord: on('shortcut:record'),
+  onNav: on('nav'),
+  onAiChanged: on('ai:changed'),
+  onUpdateChanged: on('update:changed'),
+  onChatToken: on('chat:token'),
+  onStopRequest: on('app:stopRecording'),
+});

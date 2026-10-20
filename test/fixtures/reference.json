@@ -1,0 +1,56 @@
+[
+  {
+    "who": "voce",
+    "start": 0.6,
+    "end": 4.976,
+    "text": "Bom dia pessoal, vamos começar a reunião de planejamento do lançamento do aplicativo."
+  },
+  {
+    "who": "ana",
+    "start": 5.676,
+    "end": 10.598125,
+    "text": "Bom dia. Eu revisei o cronograma e acho que a data de quinze de novembro está apertada."
+  },
+  {
+    "who": "bruno",
+    "start": 11.298125,
+    "end": 15.5789375,
+    "text": "Concordo com a Ana. A integração com o sistema de pagamentos ainda não foi testada."
+  },
+  {
+    "who": "voce",
+    "start": 16.2789375,
+    "end": 20.8325625,
+    "text": "Entendi. Então vamos decidir: o lançamento passa para o dia vinte e nove de novembro."
+  },
+  {
+    "who": "ana",
+    "start": 21.5325625,
+    "end": 25.94575,
+    "text": "Perfeito. Eu fico responsável por atualizar o cronograma até sexta-feira."
+  },
+  {
+    "who": "bruno",
+    "start": 26.64575,
+    "end": 29.8328125,
+    "text": "E eu faço os testes da integração de pagamentos até a próxima quarta."
+  },
+  {
+    "who": "voce",
+    "start": 30.5328125,
+    "end": 35.3005,
+    "text": "Ótimo. Ainda falta definir o orçamento de marketing, deixamos isso para a próxima reunião."
+  },
+  {
+    "who": "bruno",
+    "start": 36.0005,
+    "end": 40.3890625,
+    "text": "Só um ponto: precisamos confirmar com o jurídico os termos de uso antes do lançamento."
+  },
+  {
+    "who": "voce",
+    "start": 41.089062500000004,
+    "end": 43.78475,
+    "text": "Boa lembrança. Obrigado a todos, até a próxima."
+  }
+]

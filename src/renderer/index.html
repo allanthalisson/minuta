@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' minuta-media: blob:; connect-src 'self' minuta-media:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Minuta</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app" class="app">
+    <aside class="sidebar" id="sidebar" aria-label="Navegação"></aside>
+    <main class="content" id="content"></main>
+  </div>
+  <div id="overlay"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div id="updbox" role="status" aria-live="polite"></div>
+  <script src="util.js"></script>
+  <script src="recorder.js"></script>
+  <script src="views/sidebar.js"></script>
+  <script src="views/home.js"></script>
+  <script src="views/meeting.js"></script>
+  <script src="views/templates.js"></script>
+  <script src="views/settings.js"></script>
+  <script src="views/onboarding.js"></script>
+  <script src="update.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

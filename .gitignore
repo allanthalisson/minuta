@@ -1,0 +1,6 @@
+node_modules/
+dist/
+build/stage-*/
+build/macpkg-*/
+test/shots/
+test/fixtures/*.wav
