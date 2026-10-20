@@ -1,8 +1,27 @@
 # Minuta
 
 App desktop (Windows e macOS) que grava reuniões, transcreve, separa as vozes e escreve a ata com IA **local**.
-Não usa conta nem chave de API. Interface no estilo dos apps de Mac; os fluxos estão descritos em [docs/UX-DOSSIE.md](docs/UX-DOSSIE.md).
-Para instalar como usuário, veja [INSTALAR.md](INSTALAR.md).
+Sem robô entrando na call, sem conta, sem chave de API: o áudio, a transcrição e a ata ficam numa pasta sua.
+
+**[⬇ Baixar a última versão](https://github.com/allanthalisson/minuta/releases/latest)** · [como instalar](INSTALAR.md) · [decisões de interface](docs/UX-DOSSIE.md)
+
+![A ata de uma reunião, com resumo, decisões, pontos em aberto e ações](docs/img/02-ata.png)
+
+Você anota só o essencial durante a reunião e a ata parte dessas notas: **o que você escreveu aparece em texto escuro,
+o que a IA completou a partir da conversa aparece em cinza**. Cada item leva ao trecho da gravação de onde veio.
+*(a ata acima é um exemplo escrito à mão, para mostrar o layout)*
+
+## As telas
+
+| | |
+|---|---|
+| ![Transcrição com os nomes dos participantes e horários](docs/img/04-transcricao.png) **Transcrição com as vozes separadas.** No modo Avançado o app agrupa as falas por voz e você dá nome a cada participante. Clicar no horário toca aquele trecho. *(saída real do reconhecedor)* | ![Aba de notas com o que foi escrito durante a reunião](docs/img/05-notas.png) **Suas notas durante a reunião.** No modo Avançado cada linha guarda o horário em que foi escrita, e a ata usa esses pontos como base. |
+| ![Lista de reuniões agrupada por data, com projetos na barra lateral](docs/img/01-lista.png) **Tudo organizado.** Projetos e subprojetos, busca pelo conteúdo da ata e da transcrição, e filtros por data e por projeto. | ![Editor de templates de ata](docs/img/06-templates.png) **Templates de ata.** Seis prontos e um editor para criar os seus. Trocar o template refaz a ata sem reprocessar o áudio. |
+| ![Ajustes com os serviços de IA opcionais](docs/img/07-servicos-de-ia.png) **Serviços de IA opcionais.** Dá para apontar transcrição, ata ou perguntas para OpenAI, OpenRouter, Groq, xAI ou um servidor seu. Tudo desligado = tudo local. | ![Aviso de versão nova no canto da tela](docs/img/08-atualizacao.png) **Avisa quando sai versão nova.** No Windows baixa e instala sozinho; no Mac abre a página do download. |
+
+Modo escuro também:
+
+![A mesma ata no modo escuro](docs/img/03-ata-escuro.png)
 
 ## Como funciona
 ```
@@ -37,6 +56,7 @@ Testes de ponta a ponta, com modelos reais de transcrição e vozes sintéticas,
 node test/make-meeting.js                 # gera a reunião sintética (precisa das vozes Piper em $MODELS)
 xvfb-run -a node test/e2e.js              # Electron real: onboarding, gravação, transcrição, vozes, ata, filtros, templates
 PACKAGED=build/stage-linux-x64/dist/linux-unpacked/minuta xvfb-run -a node test/e2e.js   # o mesmo no app empacotado
+xvfb-run -a node test/showcase.js         # regera as capturas de tela do README em docs/img
 ```
 
 ## Gerar os instaladores
