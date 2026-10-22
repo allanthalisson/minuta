@@ -5,15 +5,15 @@ Não pede conta, chave de API nem token. A internet só é usada uma vez, para b
 
 | Sistema | Arquivo | Requisitos |
 |---|---|---|
-| Windows 10/11 (64 bits) | `Minuta-Setup-1.1.2-x64.exe` | 8 GB de RAM (Light) ou 16 GB (Avançado) |
-| Mac com chip Apple (M1, M2, M3, M4) | `Minuta-1.1.2-mac-arm64.zip` | macOS 14.2 ou mais novo para gravar o som da call |
-| Mac com Intel | `Minuta-1.1.2-mac-x64.zip` | macOS 14.2 ou mais novo |
+| Windows 10/11 (64 bits) | `Minuta-Setup-1.1.3-x64.exe` | 8 GB de RAM (Light) ou 16 GB (Avançado) |
+| Mac com chip Apple (M1, M2, M3, M4) | `Minuta-1.1.3-mac-arm64.zip` | macOS 14.2 ou mais novo para gravar o som da call |
+| Mac com Intel | `Minuta-1.1.3-mac-x64.zip` | macOS 14.2 ou mais novo |
 
 > No Mac não existe `.exe`: a versão de Mac é um app (`Minuta.app`) dentro de um `.zip`.
 
 ## Windows
 
-1. Abra `Minuta-Setup-1.1.2-x64.exe`.
+1. Abra `Minuta-Setup-1.1.3-x64.exe`.
 2. O Windows pode mostrar **"O Windows protegeu o computador"**, porque o instalador não tem assinatura digital paga.
    Clique em **Mais informações → Executar assim mesmo**.
 3. Siga o instalador. Não precisa de administrador; ele cria atalhos no menu Iniciar e na área de trabalho.

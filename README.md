@@ -41,6 +41,10 @@ Interface (renderer, sandbox)  ── IPC ──  Processo principal (Electron) 
 - **Vozes (Avançado):** a faixa do microfone é sempre "você". Na faixa da call, cada fala gera um embedding, e as falas
   são agrupadas por similaridade de cosseno. Ecos da call que vazaram no microfone são descartados por comparação de texto e tempo.
 - **Ata:** o template vira um JSON Schema e o modelo é forçado por gramática a responder nesse formato.
+  - O modelo é carregado com `gpuLayers: { fitContext }`, então o carregador só deixa na placa de vídeo as camadas que
+    ainda permitem o contexto pedido. Depois o contexto é criado com `{ min, max }`, encolhendo em vez de falhar.
+    Se nem o mínimo couber na VRAM, o modelo é recarregado no processador. (Antes dava
+    "A context size of N is too large for the available VRAM" e a ata não saía.)
   - Reuniões longas são lidas em blocos e depois sintetizadas.
   - Cada item é ligado às suas notas (texto escuro) e ao trecho da transcrição (botão de horário).
   - Notas que o modelo ignorou entram em "Suas notas", para nada se perder.

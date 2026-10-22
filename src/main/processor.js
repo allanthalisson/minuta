@@ -42,6 +42,17 @@ function mixToWav(dir) {
   return len / 2 / SR;
 }
 
+// Mensagens técnicas do motor viram algo que o usuário consegue agir.
+function friendlyError(e) {
+  const m = (e && e.message) || String(e);
+  if (/too large for the available|out of memory|failed to allocate|InsufficientMemory/i.test(m)) {
+    return 'Faltou memória para escrever a ata. O app reduz o contexto e tenta usar o processador no lugar da placa de vídeo; '
+      + 'se continuar, troque para o modo Light em Ajustes (modelo menor) ou feche programas pesados e tente de novo.';
+  }
+  if (/motor de IA parou/i.test(m)) return m + ' Se repetir, o modo Light usa um modelo menor e exige menos memória.';
+  return m;
+}
+
 class Processor {
   constructor({ store, engine, notify, log, modelStatus, aiFor = () => null }) {
     this.store = store; this.engine = engine; this.notify = notify; this.log = log; this.modelStatus = modelStatus; this.aiFor = aiFor;
@@ -97,7 +108,7 @@ class Processor {
     try { await this.run(job); }
     catch (e) {
       this.log(`falha em ${job.id}: ${e.stack || e.message}`);
-      if (this.store.meetings.has(job.id)) this.store.setStatus(job.id, { status: 'error', stage: null, error: e.message || String(e) });
+      if (this.store.meetings.has(job.id)) this.store.setStatus(job.id, { status: 'error', stage: null, error: friendlyError(e) });
       this.notify(job.id);
     } finally { this.busy = false; this.current = null; setImmediate(() => this.pump()); }
   }
@@ -207,4 +218,4 @@ class Processor {
   }
 }
 
-module.exports = { Processor, mixToWav, wavHeader };
+module.exports = { Processor, friendlyError, mixToWav, wavHeader };

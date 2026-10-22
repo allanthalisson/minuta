@@ -4,7 +4,7 @@ const fs = require('fs'), os = require('os'), path = require('path');
 const T = require('../src/engine/transcript');
 const { shapeAta, buildSchema, repairJson, chunkLines } = require('../src/engine/ata');
 const { Store } = require('../src/main/store');
-const { mixToWav, Processor } = require('../src/main/processor');
+const { mixToWav, Processor, friendlyError } = require('../src/main/processor');
 const render = require('../src/shared/render');
 const { BUILTIN_TEMPLATES } = require('../src/shared/templates');
 
@@ -104,5 +104,10 @@ t('faixas separadas: guardadas ou apagadas conforme a opção', () => {
   mk(); assert.strictEqual(p.hasTracks(dir), true);
   p.restoreTracks(dir); assert(fs.existsSync(path.join(dir, 'mic.pcm')));
   fs.rmSync(dir, { recursive: true, force: true });
+});
+t('erro de memória vira instrução para o usuário', () => {
+  const m = friendlyError(new Error('A context size of 11296 is too large for the available VRAM'));
+  assert(/Faltou memória/.test(m) && /modo Light/.test(m), m);
+  assert.strictEqual(friendlyError(new Error('disco cheio')), 'disco cheio');
 });
 console.log(`\n${ok} ok`);

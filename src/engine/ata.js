@@ -135,12 +135,18 @@ function shapeAta(raw, { template, keys, notes, segs }) {
   return { titulo: clean(raw.titulo), resumo: clean(raw.resumo), secoes, acoes };
 }
 
+const MIN_CTX = 2048;
+// "A context size of N is too large for the available VRAM/RAM" — memória insuficiente, não um defeito.
+const isMemoryError = (e) => /too large for the available|InsufficientMemory|out of memory|failed to allocate/i.test(String((e && e.message) || e));
+
 class AtaWriter {
   constructor({ getLlama, modelPath, contextSize = 8192, gpu = 'auto', threads, log = () => {} }) {
     const os = require('os');
     this.threads = threads || Math.max(1, Math.min(8, (os.availableParallelism ? os.availableParallelism() : os.cpus().length)));
-    this.getLlamaFn = getLlama; this.modelPath = modelPath; this.contextSize = contextSize; this.gpu = gpu; this.log = log;
-    this.llama = null; this.model = null; this.idleTimer = null;
+    this.getLlamaFn = getLlama; this.modelPath = modelPath; this.gpu = gpu; this.log = log;
+    this.wantedContextSize = contextSize;  // o ideal
+    this.contextSize = contextSize;        // o que esta máquina aguenta (ajustado no load)
+    this.llama = null; this.model = null; this.idleTimer = null; this.onCpu = false;
   }
 
   async load() {
@@ -148,8 +154,35 @@ class AtaWriter {
     if (this.model) return;
     if (!this.llama) {
       try { this.llama = await this.getLlamaFn({ gpu: this.gpu }); }
-      catch (e) { this.log('GPU indisponível, usando CPU: ' + e.message); this.llama = await this.getLlamaFn({ gpu: false }); }
+      catch (e) { this.log('GPU indisponível, usando CPU: ' + e.message); this.llama = await this.getLlamaFn({ gpu: false }); this.onCpu = true; }
     }
+    // `fitContext` faz o carregador deixar na placa só as camadas que ainda permitem o contexto que precisamos.
+    // Sem isso o modelo ocupa a VRAM toda e depois não sobra espaço para o contexto (erro que aparecia na ata).
+    this.model = await this.llama.loadModel({ modelPath: this.modelPath, gpuLayers: { fitContext: { contextSize: this.wantedContextSize } } });
+    await this.measureContext();
+  }
+
+  // Descobre, uma vez por carregamento, o maior contexto que cabe de verdade nesta máquina.
+  async measureContext() {
+    const opts = { contextSize: { min: MIN_CTX, max: this.wantedContextSize }, threads: this.threads };
+    let ctx = null;
+    try { ctx = await this.model.createContext(opts); }
+    catch (e) {
+      if (!isMemoryError(e) || this.onCpu) throw e;
+      this.log('sem memória de vídeo para a ata; passando para o processador');
+      await this.toCpu();
+      ctx = await this.model.createContext(opts);
+    }
+    this.contextSize = ctx.contextSize;
+    if (this.contextSize < this.wantedContextSize) this.log(`contexto da ata ajustado para ${this.contextSize} tokens (cabiam ${this.wantedContextSize})`);
+    await ctx.dispose();
+  }
+
+  // Recarrega o modelo só no processador, quando a placa de vídeo não dá conta.
+  async toCpu() {
+    try { if (this.model) await this.model.dispose(); } catch (_) {}
+    this.model = null; this.onCpu = true;
+    this.llama = await this.getLlamaFn({ gpu: false });
     this.model = await this.llama.loadModel({ modelPath: this.modelPath });
   }
 
@@ -161,15 +194,30 @@ class AtaWriter {
   async unload() {
     clearTimeout(this.idleTimer);
     if (this.model) { try { await this.model.dispose(); } catch (_) {} this.model = null; }
+    this.contextSize = this.wantedContextSize; this.onCpu = false;
   }
 
   countTokens(s) { return this.model.tokenize(s).length; }
 
+  // Cria o contexto aceitando um tamanho menor se a memória apertou desde o carregamento.
+  async makeContext(wanted) {
+    const opts = { contextSize: { min: MIN_CTX, max: Math.max(MIN_CTX, wanted) }, threads: this.threads };
+    try { return await this.model.createContext(opts); }
+    catch (e) {
+      if (!isMemoryError(e) || this.onCpu) throw e;
+      this.log('sem memória de vídeo para a ata; passando para o processador');
+      await this.toCpu();
+      const ctx = await this.model.createContext(opts);
+      this.contextSize = Math.min(this.contextSize, ctx.contextSize);
+      return ctx;
+    }
+  }
+
   async ask(prompt, { schema, maxTokens = 1500, system, onToken, signal } = {}) {
     const { LlamaChatSession } = await import('node-llama-cpp');
     const promptTokens = this.countTokens(prompt) + this.countTokens(system || '') + 64;
-    const ctxSize = Math.min(this.contextSize, Math.max(2048, promptTokens + maxTokens + 256));
-    const context = await this.model.createContext({ contextSize: ctxSize, threads: this.threads });
+    const ctxSize = Math.min(this.contextSize, Math.max(MIN_CTX, promptTokens + maxTokens + 256));
+    const context = await this.makeContext(ctxSize);
     try {
       const session = new LlamaChatSession({ contextSequence: context.getSequence(), systemPrompt: system });
       const grammar = schema ? await this.llama.createGrammarForJsonSchema(schema) : undefined;
@@ -268,4 +316,4 @@ class CloudWriter extends AtaWriter {
   }
 }
 
-module.exports = { repairJson, AtaWriter, CloudWriter, buildSchema, shapeAta, chunkLines, finalPrompt, systemPrompt, EXTRACT_SCHEMA };
+module.exports = { repairJson, isMemoryError, AtaWriter, CloudWriter, buildSchema, shapeAta, chunkLines, finalPrompt, systemPrompt, EXTRACT_SCHEMA };
